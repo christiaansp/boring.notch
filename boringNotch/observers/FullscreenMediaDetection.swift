@@ -55,6 +55,12 @@ class FullscreenMediaDetector: ObservableObject {
     func checkFullScreenStatus() {
         DispatchQueue.main.async {
             if let frontmostApp = NSWorkspace.shared.frontmostApplication {
+                // Exclude Finder
+                guard frontmostApp.bundleIdentifier != "com.apple.finder" else {
+                    self.currentAppInFullScreen = false
+                    return
+                }
+                
                 let sameAsNowPlaying = !Defaults[.alwaysHideInFullscreen] ? frontmostApp.bundleIdentifier == self.nowPlaying.appBundleIdentifier : true
                 
                 NSLog(Defaults[.enableFullscreenMediaDetection] ? "Fullscreen media detection is enabled." : "Fullscreen media detection is disabled.")
@@ -68,6 +74,9 @@ class FullscreenMediaDetector: ObservableObject {
     func isAppFullScreen(_ app: NSRunningApplication) -> Bool {
         let fullscreenApps = detector.detectFullscreenApps(debug: false)
         return fullscreenApps.contains {
+            // Exclude Finder
+            guard $0.bundleIdentifier != "com.apple.finder" else { return false }
+            
             let isSameApp = $0.bundleIdentifier == app.bundleIdentifier
             if isSameApp { NSLog("Same app found! (Fullscreen: \(String(describing: $0.debugDescription)))") }
             return isSameApp
